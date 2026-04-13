@@ -1,0 +1,80 @@
+# Facturacion Electronica - Monotributo
+
+## Proyecto
+Script CLI para emitir Facturas C y Notas de Credito C via ARCA (ex-AFIP) usando pyafipws.
+
+## Titular
+- **Nombre**: TU NOMBRE COMPLETO
+- **CUIT**: XX-XXXXXXXX-X
+- **Categoria**: X (Servicios/Venta de cosas muebles)
+- **Domicilio fiscal**: Tu direccion, Ciudad, Provincia (CP XXXX)
+- **Punto de venta WS**: X (Factura Electronica - Monotributo - Web Services)
+
+## Archivos clave
+- `facturar.py` — CLI principal (factura, nota-credito, listar, consultar)
+- `mi_certificado.crt` — Certificado digital ARCA
+- `mi_clave.key` — Clave privada RSA 2048
+- `facturas/` — PDFs generados + registro.json con historial
+- `cache/` — Tickets de acceso WSAA (TTL 5hs, auto-renovacion)
+
+## Uso
+
+```bash
+# Emitir factura (produccion)
+python facturar.py factura \
+  --monto 1000000 \
+  --cliente "Consumidor Final" \
+  --descripcion "Servicios de desarrollo de software - Mes 2026" \
+  --desde 20260101 --hasta 20260131 \
+  --produccion
+
+# Emitir factura con CUIT del cliente
+python facturar.py factura \
+  --monto 1000000 \
+  --cliente "Empresa SRL" \
+  --cuit-cliente 30XXXXXXXXX \
+  --descripcion "Desarrollo de software" \
+  --desde 20260101 --hasta 20260131 \
+  --produccion
+
+# Nota de credito (anular factura)
+python facturar.py nota-credito \
+  --monto 1000000 \
+  --cliente "Consumidor Final" \
+  --descripcion "Anulacion FC 0003-00000001" \
+  --desde 20260101 --hasta 20260131 \
+  --factura-asociada 1 \
+  --produccion
+
+# Listar comprobantes emitidos
+python facturar.py listar
+
+# Consultar factura en ARCA
+python facturar.py consultar --numero 1 --produccion
+```
+
+## Tipos de comprobante
+- **Factura C** (tipo 11) — Monotributo, no discrimina IVA
+- **Nota de Credito C** (tipo 13) — Para anular/ajustar facturas
+- **Concepto 2** — Servicios (requiere periodo desde/hasta)
+
+## Consumidor Final
+- Facturas < $10M: no requiere identificacion (RG 5700/2025)
+- Facturas >= $10M: requiere CUIT/CUIL/DNI del receptor
+- Sin `--cuit-cliente` va como consumidor final automaticamente
+
+## Dependencias
+```bash
+uv sync --extra dev
+```
+
+## Post-facturacion
+Despues de emitir facturas, renombrar los PDFs generados con formato descriptivo:
+```
+FC-{pto_vta}-{nro}_{fecha}_{cliente}_{monto}.pdf
+```
+
+## pyafipws (libreria base)
+- Repo original: https://github.com/reingart/pyafipws
+- Autor: Mariano Reingart
+- Modulos usados: `wsaa.py` (auth), `wsfev1.py` (facturacion), `pyfepdf.py` (PDF)

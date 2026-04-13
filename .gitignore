@@ -1,0 +1,76 @@
+# ==========================
+# Credenciales y certificados
+# ==========================
+*.key
+*.csr
+mi_*.crt
+facturacion_*.crt
+
+# ==========================
+# Archivos generados
+# ==========================
+cache/
+facturas/
+referencias/
+*.pdf
+*.jpg
+*.png
+entrada.txt
+facturas.json
+facturas.txt
+
+# ==========================
+# Python
+# ==========================
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+.venv/
+.pytest_cache/
+
+# ==========================
+# Build & distribución
+# ==========================
+dist/
+build/
+sdist/
+eggs/
+develop-eggs/
+
+# ==========================
+# Herramientas
+# ==========================
+.coverage
+.tox
+htmlcov/
+nosetests.xml
+
+# ==========================
+# Editors & OS
+# ==========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Datos privados
+# ==========================
+.env
+CLAUDE.md
+.claude/
+
+# ==========================
+# Archivos obsoletos/temporales
+# ==========================
+setup.py.bak
+main.py
+pip-log.txt
+.mr.developer.cfg
+.project
+.pydevproject

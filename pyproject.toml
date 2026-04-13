@@ -1,0 +1,151 @@
+[project]
+name = "pyafipws"
+version = "3.28.0"
+description = "Interfases, herramientas y aplicaciones para webservices de ARCA/AFIP (factura electrónica, trazabilidad, etc.)"
+requires-python = ">=3.9,<3.13"
+license = "LGPL-3.0-or-later"
+authors = [
+    { name = "Mariano Reingart", email = "reingart@gmail.com" },
+]
+maintainers = [
+    { name = "Gerardo Collante" },
+]
+keywords = ["afip", "arca", "factura", "electronica", "monotributo", "webservice", "argentina"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Natural Language :: Spanish",
+    "Topic :: Office/Business :: Financial :: Point-Of-Sale",
+]
+dependencies = [
+    "httplib2>=0.20.4",
+    "pysimplesoap==1.8.22",
+    "cryptography>=41.0.1",
+    "fpdf>=1.7.2",
+    "dbf>=0.88.019",
+    "Pillow>=2.0.0",
+    "tabulate>=0.8.5",
+    "certifi>=2020.4.5.1",
+    "qrcode>=6.1",
+    "future>=0.18.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.2.0",
+    "pytest-html>=3.2.0",
+    "pytest-vcr>=1.0.2",
+    "pytest-cov>=4.0.0",
+    "pytest-freezegun>=0.4.2",
+    "pytest-mock>=3.10.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/reingart/pyafipws"
+Documentation = "https://github.com/reingart/pyafipws/wiki"
+Repository = "https://github.com/reingart/pyafipws"
+
+[project.scripts]
+# Core
+wsaa = "pyafipws.wsaa:main"
+# Facturación
+wsfev1 = "pyafipws.facturacion.wsfev1:main"
+wsfexv1 = "pyafipws.facturacion.wsfexv1:main"
+wsbfev1 = "pyafipws.facturacion.wsbfev1:main"
+wsmtx = "pyafipws.facturacion.wsmtx:main"
+wsct = "pyafipws.facturacion.wsct:main"
+wscdc = "pyafipws.facturacion.wscdc:main"
+wscoc = "pyafipws.facturacion.wscoc:main"
+wsfecred = "pyafipws.facturacion.wsfecred:main"
+ws-sire = "pyafipws.facturacion.ws_sire:main"
+wdigdepfiel = "pyafipws.facturacion.wdigdepfiel:main"
+# Agricultura
+wsctg = "pyafipws.agricultura.wsctg:main"
+wslpg = "pyafipws.agricultura.wslpg:main"
+wslsp = "pyafipws.agricultura.wslsp:main"
+wsltv = "pyafipws.agricultura.wsltv:main"
+wslum = "pyafipws.agricultura.wslum:main"
+# Trazabilidad
+trazamed = "pyafipws.trazabilidad.trazamed:main"
+trazafito = "pyafipws.trazabilidad.trazafito:main"
+trazaprodmed = "pyafipws.trazabilidad.trazaprodmed:main"
+trazarenpre = "pyafipws.trazabilidad.trazarenpre:main"
+trazavet = "pyafipws.trazabilidad.trazavet:main"
+# Remitos
+wsremcarne = "pyafipws.remitos.wsremcarne:main"
+wsremharina = "pyafipws.remitos.wsremharina:main"
+wsremazucar = "pyafipws.remitos.wsremazucar:main"
+# Padrón
+ws-sr-padron = "pyafipws.padron.ws_sr_padron:main"
+padron = "pyafipws.padron.padron:main"
+sired = "pyafipws.padron.sired:main"
+# Provincial
+cot = "pyafipws.provincial.cot:main"
+iibb = "pyafipws.provincial.iibb:main"
+rg3685 = "pyafipws.provincial.rg3685:main"
+# PDF/QR
+pyfepdf = "pyafipws.pdf.pyfepdf:main"
+pyi25 = "pyafipws.pdf.pyi25:main"
+pyqr = "pyafipws.pdf.pyqr:main"
+pyemail = "pyafipws.pdf.pyemail:main"
+# CLI
+rece1 = "pyafipws.cli.rece1:main"
+receb1 = "pyafipws.cli.receb1:main"
+recem = "pyafipws.cli.recem:main"
+recet = "pyafipws.cli.recet:main"
+recex1 = "pyafipws.cli.recex1:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = [
+    "pyafipws",
+    "pyafipws.facturacion",
+    "pyafipws.agricultura",
+    "pyafipws.trazabilidad",
+    "pyafipws.remitos",
+    "pyafipws.padron",
+    "pyafipws.provincial",
+    "pyafipws.pdf",
+    "pyafipws.cli",
+    "pyafipws.formatos",
+]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.10",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "dontusefix: Dont use fixture in the current file",
+]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 120
+src = ["src"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "F",      # pyflakes
+    "I",      # isort
+    "UP",     # pyupgrade (Python 3 modernization)
+    "B006",   # mutable default arguments
+]
+ignore = [
+    "E402",   # imports en main() — patrón de la librería
+    "E501",   # line too long — controlado por line-length
+    "UP029",  # unnecessary-builtin-import — future/past compat layer
+    "UP031",  # 88 printf-strings con formatos anidados no convertibles a f-string
+]
+
