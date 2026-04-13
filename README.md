@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/GeraCollante/PyARCA/actions/workflows/ci.yml"><img src="https://github.com/GeraCollante/PyARCA/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://codecov.io/gh/GeraCollante/PyARCA"><img src="https://codecov.io/gh/GeraCollante/PyARCA/branch/main/graph/badge.svg" alt="Coverage"></a>
-  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue.svg" alt="Python 3.9+"></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11-blue.svg" alt="Python 3.9+"></a>
   <a href="COPYING.LESSER"><img src="https://img.shields.io/badge/license-LGPL--3.0--or--later-green.svg" alt="License: LGPL v3"></a>
   <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/linting-ruff-261230.svg" alt="Linting: ruff"></a>
   <a href="https://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/uv-package%20manager-blueviolet.svg" alt="uv"></a>
@@ -295,6 +295,17 @@ Documentación completa de la librería: [wiki de pyafipws](https://github.com/r
 Este fork se enfoca en facturación Monotributo (Factura C / NC C). Los demás módulos de la librería están reorganizados y limpios, pero no fueron probados en producción.
 
 Si usás alguno de los otros webservices (comercio exterior, agricultura, trazabilidad, etc.) y querés contribuir con tests o fixes, los PRs son bienvenidos.
+
+### Flujo de trabajo
+
+1. Crear un branch desde `main` (`feat/mi-cambio`, `fix/mi-fix`)
+2. Hacer los cambios y verificar que pasen los checks:
+   ```bash
+   uv run ruff check .
+   uv run pytest tests/test_facturar.py --cov -q
+   ```
+3. Abrir un PR contra `main` — CI corre automáticamente (ruff + tests + coverage)
+4. No se pushea directo a `main`
 
 ## Créditos
 

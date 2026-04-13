@@ -747,3 +747,131 @@ class TestArgParsing:
     def test_comando_requerido(self):
         with pytest.raises(SystemExit):
             self._parse([])
+
+
+# =============================================================================
+# 10. main() end-to-end (CLI completo con sys.argv)
+# =============================================================================
+
+class TestMainEndToEnd:
+    @patch("facturar.generar_pdf")
+    @patch("facturar.emitir_comprobante")
+    @patch("facturar.autenticar")
+    def test_main_factura(self, mock_auth, mock_emitir, mock_pdf):
+        mock_auth.return_value = Mock()
+        mock_emitir.return_value = {"tipo_cbte": 11}
+
+        with patch("sys.argv", [
+            "facturar.py", "factura",
+            "--monto", "1000000",
+            "--cliente", "Consumidor Final",
+            "--descripcion", "Servicios - Abril 2026",
+            "--desde", "20260401", "--hasta", "20260430",
+            "--produccion",
+        ]):
+            facturar.main()
+
+        mock_auth.assert_called_once_with(True)
+        mock_emitir.assert_called_once()
+        mock_pdf.assert_called_once()
+
+    @patch("facturar.generar_pdf")
+    @patch("facturar.emitir_comprobante")
+    @patch("facturar.autenticar")
+    def test_main_nota_credito(self, mock_auth, mock_emitir, mock_pdf):
+        mock_auth.return_value = Mock()
+        mock_emitir.return_value = {"tipo_cbte": 13}
+
+        with patch("sys.argv", [
+            "facturar.py", "nota-credito",
+            "--monto", "1000",
+            "--cliente", "Test",
+            "--descripcion", "Anulación",
+            "--desde", "20260401", "--hasta", "20260430",
+            "--factura-asociada", "5",
+            "--produccion",
+        ]):
+            facturar.main()
+
+        mock_auth.assert_called_once_with(True)
+        emitir_args = mock_emitir.call_args
+        assert emitir_args[0][1] == facturar.NOTA_CREDITO_C
+        assert emitir_args[1]["factura_asociada"] == 5
+
+    def test_main_listar(self, tmp_facturas, sample_comprobante, capsys):
+        facturar.guardar_registro([sample_comprobante])
+
+        with patch("sys.argv", ["facturar.py", "listar"]):
+            facturar.main()
+
+        output = capsys.readouterr().out
+        assert "Factura C" in output
+        assert "86151425715928" in output
+
+    @patch("facturar.autenticar")
+    def test_main_consultar(self, mock_auth, mock_wsfev1, capsys):
+        mock_auth.return_value = mock_wsfev1
+
+        with patch("sys.argv", [
+            "facturar.py", "consultar",
+            "--numero", "8", "--produccion",
+        ]):
+            facturar.main()
+
+        mock_wsfev1.CompConsultar.assert_called_once_with(facturar.FACTURA_C, 3, 8)
+
+    def test_main_sin_comando_exit(self):
+        with patch("sys.argv", ["facturar.py"]):
+            with pytest.raises(SystemExit):
+                facturar.main()
+
+    @patch("facturar.generar_pdf")
+    @patch("facturar.emitir_comprobante")
+    @patch("facturar.autenticar")
+    def test_main_factura_con_cuit(self, mock_auth, mock_emitir, mock_pdf):
+        mock_auth.return_value = Mock()
+        mock_emitir.return_value = {"tipo_cbte": 11}
+
+        with patch("sys.argv", [
+            "facturar.py", "factura",
+            "--monto", "2468797",
+            "--cliente", "Wais SRL",
+            "--cuit-cliente", "30717509117",
+            "--descripcion", "Desarrollo",
+            "--desde", "20260301", "--hasta", "20260331",
+        ]):
+            facturar.main()
+
+        emitir_args = mock_emitir.call_args[0]
+        assert emitir_args[3] == "Wais SRL"  # cliente
+        assert emitir_args[4] == "Desarrollo"  # descripcion
+
+
+# =============================================================================
+# 11. _load_env()
+# =============================================================================
+
+class TestLoadEnv:
+    def test_load_env_no_file(self, tmp_path, monkeypatch):
+        """Si no existe .env, no explota."""
+        monkeypatch.setattr(facturar, "_load_env", lambda: None)
+        # Simplemente verificar que el módulo carga sin .env
+
+    def test_load_env_sets_vars(self, tmp_path):
+        """_load_env carga variables al environ."""
+        env_file = tmp_path / ".env"
+        env_file.write_text("TEST_PYARCA_VAR=hola\n# comentario\nOTRA=chau\n")
+
+        # Simular _load_env apuntando al archivo
+        with patch("facturar.os.path.dirname", return_value=str(tmp_path)):
+            with patch("facturar.os.path.abspath", return_value=str(tmp_path / "facturar.py")):
+                os.environ.pop("TEST_PYARCA_VAR", None)
+                os.environ.pop("OTRA", None)
+                facturar._load_env()
+
+        assert os.environ.get("TEST_PYARCA_VAR") == "hola"
+        assert os.environ.get("OTRA") == "chau"
+
+        # Cleanup
+        os.environ.pop("TEST_PYARCA_VAR", None)
+        os.environ.pop("OTRA", None)

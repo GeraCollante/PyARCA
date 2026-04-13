@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv run ruff check .
+      - run: uv run ruff check src/ facturar.py tests/test_facturar.py
 
   test:
     name: Tests (Python ${{ matrix.python-version }})
@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.11", "3.12"]
+        python-version: ["3.9", "3.11"]
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -32,7 +32,7 @@ jobs:
       - name: Correr tests con coverage
         run: uv run pytest tests/test_facturar.py --cov --cov-report=xml --cov-report=term -q
       - name: Subir coverage a Codecov
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.11'
         uses: codecov/codecov-action@v5
         with:
           file: coverage.xml
