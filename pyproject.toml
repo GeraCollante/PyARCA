@@ -2,7 +2,7 @@
 name = "pyafipws"
 version = "3.28.0"
 description = "Interfases, herramientas y aplicaciones para webservices de ARCA/AFIP (factura electrónica, trazabilidad, etc.)"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9,<3.12"
 license = "LGPL-3.0-or-later"
 authors = [
     { name = "Mariano Reingart", email = "reingart@gmail.com" },
