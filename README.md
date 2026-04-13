@@ -1,11 +1,17 @@
-# PyARCA
+<p align="center">
+  <img src="docs/logo.png" alt="PyARCA" width="300">
+</p>
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue.svg)](https://www.python.org/)
-[![License: LGPL v3](https://img.shields.io/badge/license-LGPL--3.0--or--later-green.svg)](COPYING.LESSER)
-[![Linting: ruff](https://img.shields.io/badge/linting-ruff-261230.svg)](https://docs.astral.sh/ruff/)
-[![Tests: 48 passed](https://img.shields.io/badge/tests-48%20passed-brightgreen.svg)]()
-[![uv](https://img.shields.io/badge/uv-package%20manager-blueviolet.svg)](https://docs.astral.sh/uv/)
-[![Claude Code](https://img.shields.io/badge/Claude%20Code-optimized-ff6600.svg)](https://claude.ai/claude-code)
+<h1 align="center">PyARCA</h1>
+
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue.svg" alt="Python 3.9+"></a>
+  <a href="COPYING.LESSER"><img src="https://img.shields.io/badge/license-LGPL--3.0--or--later-green.svg" alt="License: LGPL v3"></a>
+  <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/linting-ruff-261230.svg" alt="Linting: ruff"></a>
+  <img src="https://img.shields.io/badge/tests-48%20passed-brightgreen.svg" alt="Tests: 48 passed">
+  <a href="https://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/uv-package%20manager-blueviolet.svg" alt="uv"></a>
+  <a href="SKILL.md"><img src="https://img.shields.io/badge/Claude%20Code-optimized-ff6600.svg" alt="Claude Code"></a>
+</p>
 
 CLI para emitir **Facturas C** y **Notas de Crédito C** (Monotributo) contra ARCA (ex-AFIP) desde la terminal. Construido sobre [pyafipws](https://github.com/reingart/pyafipws), la librería de webservices de AFIP creada por **Mariano Reingart**.
 
