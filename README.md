@@ -5,10 +5,11 @@
 <h1 align="center">PyARCA</h1>
 
 <p align="center">
+  <a href="https://github.com/GeraCollante/PyARCA/actions/workflows/ci.yml"><img src="https://github.com/GeraCollante/PyARCA/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://codecov.io/gh/GeraCollante/PyARCA"><img src="https://codecov.io/gh/GeraCollante/PyARCA/branch/main/graph/badge.svg" alt="Coverage"></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12-blue.svg" alt="Python 3.9+"></a>
   <a href="COPYING.LESSER"><img src="https://img.shields.io/badge/license-LGPL--3.0--or--later-green.svg" alt="License: LGPL v3"></a>
   <a href="https://docs.astral.sh/ruff/"><img src="https://img.shields.io/badge/linting-ruff-261230.svg" alt="Linting: ruff"></a>
-  <img src="https://img.shields.io/badge/tests-48%20passed-brightgreen.svg" alt="Tests: 48 passed">
   <a href="https://docs.astral.sh/uv/"><img src="https://img.shields.io/badge/uv-package%20manager-blueviolet.svg" alt="uv"></a>
   <a href="SKILL.md"><img src="https://img.shields.io/badge/Claude%20Code-optimized-ff6600.svg" alt="Claude Code"></a>
 </p>

@@ -149,3 +149,10 @@ ignore = [
     "UP031",  # 88 printf-strings con formatos anidados no convertibles a f-string
 ]
 
+[tool.coverage.run]
+source = ["facturar"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80
+
