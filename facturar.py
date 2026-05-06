@@ -25,6 +25,8 @@ import json
 import os
 import sys
 
+from pysimplesoap.client import SoapFault
+
 from pyafipws.facturacion.wsfev1 import WSFEv1
 from pyafipws.facturacion.wsfexv1 import WSFEXv1
 from pyafipws.pdf.pyfepdf import FEPDF
@@ -106,7 +108,27 @@ def autenticar(produccion=False, servicio="wsfe"):
         cliente_cls = WSFEv1
 
     wsaa = WSAA()
-    ta = wsaa.Autenticar(servicio, CERT, PRIVATEKEY, wsdl=url_wsaa, cache=CACHE)
+    try:
+        ta = wsaa.Autenticar(servicio, CERT, PRIVATEKEY, wsdl=url_wsaa, cache=CACHE)
+    except SoapFault as e:
+        codigo = str(e.faultcode)
+        if "coe.notAuthorized" in codigo:
+            nombre_servicio = (
+                "Factura electronica de exportacion" if servicio == "wsfex"
+                else "Facturación Electrónica"
+            )
+            print(f"\nERROR: El Computador Fiscal no está autorizado a usar '{nombre_servicio}'.")
+            print("\nPara habilitarlo:")
+            print("  1. Entrá a ARCA → 'Administrador de Relaciones de Clave Fiscal'")
+            print(f"  2. Nueva Relación → buscá '{nombre_servicio}'")
+            print("  3. Asociala al Computador Fiscal que ya usás (ej. 'facturacion')")
+            sys.exit(1)
+        if "cms.cert.untrusted" in codigo:
+            print(f"\nERROR: El certificado no es válido para el ambiente '{env}'.")
+            print("  - Los certificados de producción NO funcionan contra homologación.")
+            print("  - Para homologación necesitás generar un certificado distinto en wsaahomo.")
+            sys.exit(1)
+        raise
     if not ta:
         print("ERROR: No se pudo autenticar contra WSAA")
         print(f"  Verificar que existan {CERT} y {PRIVATEKEY}")
@@ -249,7 +271,11 @@ def emitir_comprobante_e(wsfexv1, tipo_cbte, monto, cliente, cuit_pais_cliente,
             if not ctz:
                 print(f"ERROR: No se pudo obtener cotización para moneda '{moneda}'")
                 sys.exit(1)
-            tipo_cambio = float(ctz)
+            try:
+                tipo_cambio = float(ctz)
+            except (TypeError, ValueError):
+                print(f"ERROR: Cotización inválida '{ctz}' para moneda '{moneda}'")
+                sys.exit(1)
             print(f"  Cotización {moneda} (ARCA): {tipo_cambio}")
 
     ultimo_cbte = wsfexv1.GetLastCMP(tipo_cbte, punto_vta) or 0
@@ -334,7 +360,7 @@ def emitir_comprobante_e(wsfexv1, tipo_cbte, monto, cliente, cuit_pais_cliente,
         "monto": monto,
         "cliente": cliente,
         "descripcion": descripcion,
-        "tipo_doc": 80,                       # WSFEXv1 fija tipo_doc=80 para receptor
+        "tipo_doc": 80 if cuit_pais_cliente else 99,
         "nro_doc": cuit_pais_cliente,
         "pais_destino": pais_destino,
         "moneda": moneda,
