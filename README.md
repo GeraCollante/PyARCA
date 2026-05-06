@@ -32,14 +32,13 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 git clone <repo-url> && cd PyARCA
 uv sync --extra dev
 
-# 3. Emitir una factura (necesitás certificado digital, ver abajo)
-uv run python facturar.py factura \
-    --monto 1000000 \
-    --cliente "Consumidor Final" \
-    --descripcion "Servicios de desarrollo de software - Abril 2026" \
-    --desde 20260401 --hasta 20260430 \
-    --produccion
+# 3. Ver opciones del CLI
+uv run python facturar.py --help
 ```
+
+Para emitir una factura real necesitás certificado digital — seguí la **Guía completa** debajo. Antes de operar contra producción, **probá siempre contra homologación** (sin `--produccion`).
+
+> ⚠️ **Cuidado con `--produccion`.** Cuando agregás esa flag, el CLI emite una factura **real** ante ARCA con consecuencias fiscales. Probá primero sin la flag para validar que tu certificado y configuración funcionan contra el ambiente de homologación.
 
 ---
 
