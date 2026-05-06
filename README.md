@@ -138,6 +138,8 @@ Ahora tenés dos archivos:
 
 > **¿Por qué dice "Computador Fiscal"?** Es la forma que tiene ARCA de vincular tu certificado digital con un servicio específico. Tu "computador fiscal" es tu máquina/servidor que va a firmar las facturas.
 
+> **¿Vas a emitir Factura E (exportación)?** Repetí este paso pero asociando el servicio **"Factura electronica de exportacion"** al mismo Computador Fiscal `facturacion`. Sin esto, los subcomandos `factura-e` y `nota-credito-e` fallan al autenticar contra WSFEXv1. Si solo facturás mercado interno (Factura C), podés saltearlo.
+
 ### 🏪 Paso 5: Crear el punto de venta
 
 El punto de venta es el número que aparece al inicio de tus facturas (ej. **0003**-00000001). Necesitás uno configurado para Web Services.
@@ -242,6 +244,41 @@ uv run python facturar.py nota-credito \
     --produccion
 ```
 
+### Factura E — exportación de servicios
+
+Para emitir contra clientes del exterior (Webservice WSFEXv1). Requiere haber habilitado el servicio **"Factura electronica de exportacion"** en ARCA — ver Paso 4 del tutorial.
+
+```bash
+uv run python facturar.py factura-e \
+    --monto 1000 \
+    --cliente "Acme Inc" \
+    --cuit-pais-cliente 50000000059 \
+    --descripcion "Software development services - April 2026" \
+    --pais-destino 200 \
+    --moneda DOL \
+    --tipo-cambio 1180.50 \
+    --incoterms "N/A" \
+    --idioma 7 \
+    --produccion
+```
+
+Si no pasás `--tipo-cambio`, el CLI consulta la cotización del día a ARCA. Códigos de país comunes: **200**=USA, **203**=Brasil, **212**=Reino Unido. Idiomas: **7**=español (default), **1**=inglés, **2**=portugués.
+
+### Nota de crédito E (anulación de Factura E)
+
+```bash
+uv run python facturar.py nota-credito-e \
+    --monto 1000 \
+    --cliente "Acme Inc" \
+    --cuit-pais-cliente 50000000059 \
+    --descripcion "Cancellation of FE 0003-00000001" \
+    --pais-destino 200 \
+    --moneda DOL \
+    --tipo-cambio 1180.50 \
+    --factura-asociada 1 \
+    --produccion
+```
+
 ### Listar comprobantes emitidos
 
 ```bash
@@ -277,10 +314,12 @@ Sin `--produccion`, opera contra homologación (requiere certificado de testing)
 
 | Tipo | Código | Descripción |
 |------|--------|-------------|
-| Factura C | 11 | Monotributo, no discrimina IVA |
-| Nota de Crédito C | 13 | Anulación/ajuste de facturas |
+| Factura C | 11 | Monotributo, no discrimina IVA — mercado interno |
+| Nota de Crédito C | 13 | Anulación/ajuste de Factura C |
+| Factura E | 19 | Exportación de servicios, no discrimina IVA |
+| Nota de Crédito E | 21 | Anulación/ajuste de Factura E |
 
-Concepto **2 (Servicios)** — requiere período desde/hasta.
+Concepto **2 (Servicios)** — requiere período desde/hasta para C y NC C.
 
 Para facturas a consumidor final menores a $10M, no se requiere identificación del receptor (RG 5700/2025).
 

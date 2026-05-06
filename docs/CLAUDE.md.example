@@ -46,6 +46,29 @@ python facturar.py nota-credito \
   --factura-asociada 1 \
   --produccion
 
+# Factura E (exportacion de servicios)
+python facturar.py factura-e \
+  --monto 1000 \
+  --cliente "Acme Inc" \
+  --cuit-pais-cliente 50000000059 \
+  --descripcion "Software development services - April 2026" \
+  --pais-destino 200 \
+  --moneda DOL \
+  --tipo-cambio 1180.50 \
+  --produccion
+
+# Nota de credito E (anular Factura E)
+python facturar.py nota-credito-e \
+  --monto 1000 \
+  --cliente "Acme Inc" \
+  --cuit-pais-cliente 50000000059 \
+  --descripcion "Cancellation of FE 0003-00000001" \
+  --pais-destino 200 \
+  --moneda DOL \
+  --tipo-cambio 1180.50 \
+  --factura-asociada 1 \
+  --produccion
+
 # Listar comprobantes emitidos
 python facturar.py listar
 
@@ -54,9 +77,11 @@ python facturar.py consultar --numero 1 --produccion
 ```
 
 ## Tipos de comprobante
-- **Factura C** (tipo 11) — Monotributo, no discrimina IVA
-- **Nota de Credito C** (tipo 13) — Para anular/ajustar facturas
-- **Concepto 2** — Servicios (requiere periodo desde/hasta)
+- **Factura C** (tipo 11) — Monotributo, mercado interno (WSFEv1)
+- **Nota de Credito C** (tipo 13) — Anula/ajusta Factura C (WSFEv1)
+- **Factura E** (tipo 19) — Exportacion de servicios (WSFEXv1)
+- **Nota de Credito E** (tipo 21) — Anula/ajusta Factura E (WSFEXv1)
+- **Concepto 2** — Servicios (requiere periodo desde/hasta para C y NC C)
 
 ## Consumidor Final
 - Facturas < $10M: no requiere identificacion (RG 5700/2025)
