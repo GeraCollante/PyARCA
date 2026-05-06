@@ -1063,6 +1063,31 @@ class TestEmitirComprobanteE:
         assert result["nro_doc"] == ""
 
     @patch("facturar.datetime")
+    def test_domicilio_vacio_usa_no_declarado(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, tipo_cambio=1.0,
+        )
+
+        kwargs = mock_wsfexv1.CrearFactura.call_args[1]
+        assert kwargs["domicilio_cliente"] == "NO DECLARADO"
+
+    @patch("facturar.datetime")
+    def test_domicilio_provisto_se_respeta(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, tipo_cambio=1.0,
+            domicilio_cliente="123 Main St, NYC",
+        )
+
+        kwargs = mock_wsfexv1.CrearFactura.call_args[1]
+        assert kwargs["domicilio_cliente"] == "123 Main St, NYC"
+
+    @patch("facturar.datetime")
     def test_moneda_pes_no_consulta_cotizacion(self, mock_dt, mock_wsfexv1, tmp_facturas):
         mock_dt.date.today.return_value.strftime.return_value = "20260506"
 
@@ -1227,6 +1252,16 @@ class TestGenerarPDFE:
         sample_e["tipo_cbte"] = 21
         result = facturar.generar_pdf_e(sample_e, produccion=True)
         assert "NE-0003-00000001.pdf" in result
+
+    @patch("facturar.FEPDF")
+    def test_id_impositivo_vacio_usa_cero(self, MockFEPDF, sample_e, tmp_facturas):
+        fepdf = MockFEPDF.return_value
+        sample_e["nro_doc"] = ""
+
+        facturar.generar_pdf_e(sample_e, produccion=True)
+
+        kwargs = fepdf.CrearFactura.call_args[1]
+        assert kwargs["id_impositivo"] == "0"
 
     @patch("facturar.FEPDF")
     def test_homologacion_marca_agua(self, MockFEPDF, sample_e, tmp_facturas):
