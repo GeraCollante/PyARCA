@@ -309,7 +309,7 @@ def emitir_comprobante_e(wsfexv1, tipo_cbte, monto, cliente, cuit_pais_cliente,
         moneda_id=moneda,
         moneda_ctz=tipo_cambio,
         incoterms=incoterms,
-        incoterms_ds=incoterms,
+        incoterms_ds=incoterms if incoterms != "N/A" else "",
         idioma_cbte=idioma,
     )
 
@@ -331,7 +331,8 @@ def emitir_comprobante_e(wsfexv1, tipo_cbte, monto, cliente, cuit_pais_cliente,
         )
         print(f"  Asociada a FE {punto_vta:04d}-{factura_asociada:08d}")
 
-    cae = wsfexv1.Authorize(id_transaccion)
+    wsfexv1.Authorize(id_transaccion)
+    cae = wsfexv1.CAE
 
     if wsfexv1.ErrMsg:
         print(f"\nERROR AFIP: {wsfexv1.ErrMsg}")
