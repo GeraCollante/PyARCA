@@ -44,9 +44,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # Modelo: DeepSeek V4-Flash (el barato y rápido).
-          # Si querés mejor calidad y no te importa pagar 10x más, cambiar a deepseek-reasoner (V4-Pro).
-          config.model: "deepseek/deepseek-chat"
-          config.fallback_models: '["deepseek/deepseek-chat"]'
+          # Si querés mejor calidad y no te importa pagar 10x más, cambiar a deepseek/deepseek-v4-pro.
+          # Nota: el alias legacy `deepseek-chat` se retira el 2026-07-24.
+          config.model: "deepseek/deepseek-v4-flash"
+          config.fallback_models: '["deepseek/deepseek-v4-flash"]'
           DEEPSEEK.KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
           # Automatizaciones en cada PR nueva
@@ -58,7 +59,7 @@ jobs:
           # `synchronize` — si solo se agrega al trigger del workflow sin
           # agregarlo acá, el action arranca pero Qodo internamente loguea
           # "Skipping action: synchronize" y no postea nada.
-          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "review_requested", "synchronize"]'
+          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "synchronize"]'
 
           # En cada `synchronize` queremos reprocesar toda la PR, no agrupar por
           # commits nuevos. Desactivamos comentarios persistentes e historial
