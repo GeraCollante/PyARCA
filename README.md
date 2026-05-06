@@ -127,13 +127,15 @@ Ahora tenés dos archivos:
 
 ### 🔗 Paso 4: Habilitar el servicio de Facturación Electrónica
 
-1. Volvé al **"Administrador de Relaciones de Clave Fiscal"** y hacé click en **"Nueva Relación"**. En el buscador de servicios, navegá hasta **ARCA** → **WebServices** → **Facturación Electrónica** (verificá que sea esa, no "Factura electrónica de exportación" ni "MTXCA" — son otros servicios).
+1. Volvé al **"Administrador de Relaciones de Clave Fiscal"** y hacé click en **"Nueva Relación"**. En la fila *Servicio* del formulario, hacé click en **BUSCAR** — se abre un buscador con todos los servicios disponibles. Buscá **Facturación Electrónica** (verificá que sea esa, no "Factura electrónica de exportación" ni "MTXCA" — son otros servicios).
 
    ![Buscar servicio Facturación Electrónica](docs/screenshots/paso4a-buscar-facturacion.png)
 
 2. ARCA te muestra el formulario de autorización. Como **Computador Fiscal** elegí el alias que creaste en el Paso 3 (ej. `facturacion`). Confirmá.
 
    ![Autorizar Computador Fiscal](docs/screenshots/paso4b-autorizar-computador.png)
+
+   > **Nota sobre la captura:** la imagen de arriba muestra el flujo con *"Factura electronica de exportacion"* (fue la que estaba a mano cuando se sacó). El formulario es **idéntico** para *Facturación Electrónica* — solo cambia el nombre del servicio en el banner. Lo importante es que en **Computador Fiscal** elijas tu alias.
 
 > **¿Por qué dice "Computador Fiscal"?** Es la forma que tiene ARCA de vincular tu certificado digital con un servicio específico. Tu "computador fiscal" es tu máquina/servidor que va a firmar las facturas.
 
