@@ -85,45 +85,57 @@ Ahora tenés dos archivos:
 
 ### 🌐 Paso 2: Habilitar el servicio "Administración de Certificados Digitales"
 
-1. Entrá a [https://auth.afip.gob.ar/contribuyente/](https://auth.afip.gob.ar/contribuyente/) con tu CUIT y clave fiscal
-2. En el menú principal, buscá **"Administrador de Relaciones de Clave Fiscal"**
-3. Hacé click en **"Adherir servicio"**
-4. Navegá: **ARCA** → **Servicios Interactivos** → **Administración de Certificados Digitales**
-5. Confirmá
+1. Entrá a [https://auth.afip.gob.ar/contribuyente/](https://auth.afip.gob.ar/contribuyente/) con tu CUIT y clave fiscal.
+2. En el buscador del portal escribí **"administrac"** y elegí **"Administración de Certificados Digitales"**.
 
-<!-- TODO: screenshot del menú de servicios de ARCA -->
-<!-- ![Adherir servicio](docs/screenshots/paso2-adherir-servicio.png) -->
+   ![Buscar Administración de Certificados Digitales](docs/screenshots/paso2a-buscar-servicio.png)
+
+3. Si es la primera vez que lo usás, ARCA te va a redirigir a **"Administrador de Relaciones de Clave Fiscal"** para que adhieras el servicio. Hacé click en **"Adherir Servicio"**.
+
+   ![Administrador de Relaciones](docs/screenshots/paso2b-administrador-relaciones.png)
+
+4. Navegá: **ARCA** → **Servicios Interactivos** → **Administración de Certificados Digitales** y confirmá. Verificá que el **Representante** sea tu propio CUIT con clave fiscal **Nivel 3**.
+
+   ![Incorporar nueva relación](docs/screenshots/paso2c-incorporar-relacion.png)
+
+5. Cerrá sesión y volvé a entrar para que el menú se refresque.
 
 ### 📤 Paso 3: Crear el alias y subir el certificado
 
-1. Volvé al menú principal de ARCA y entrá a **"Administración de Certificados Digitales"**
-2. Vas a ver una pantalla con tus certificados (probablemente vacía)
-3. Hacé click en **"Agregar alias"**
-   - Nombre del alias: `facturacion` (o el que quieras, es solo un identificador)
-   - Confirmá
-4. En el alias que acabás de crear, hacé click en **"Agregar certificado"**
-5. Seleccioná el archivo `mi_pedido.csr` que generaste en el Paso 1
-6. Confirmá y **descargá el certificado** (archivo `.crt`)
-7. Guardá el `.crt` como `mi_certificado.crt` en la carpeta del proyecto
+1. Volvé al menú principal de ARCA y entrá a **"Administración de Certificados Digitales"**. Vas a ver una pantalla con tus alias (probablemente vacía). Hacé click en **"Agregar alias"**.
 
-<!-- TODO: screenshot de la pantalla de certificados -->
-<!-- ![Agregar certificado](docs/screenshots/paso3-agregar-certificado.png) -->
+   ![Panel de Administración de Certificados Digitales](docs/screenshots/paso3a-panel-certificados.png)
+
+2. En el formulario:
+   - **Alias:** `facturacion` (o el que quieras, es solo un identificador)
+   - **Elegir archivo:** seleccioná el `mi_pedido.csr` que generaste en el Paso 1
+   - Confirmá con **"Agregar alias"**
+
+   ![Agregar alias y subir CSR](docs/screenshots/paso3b-agregar-alias.png)
+
+3. Vas a ver el alias creado en la lista. Hacé click en **"Ver"** sobre él para abrir el detalle del certificado.
+
+   ![Alias creado](docs/screenshots/paso3c-alias-creado.png)
+
+4. ARCA te muestra los datos del certificado emitido (número de serie, fecha de emisión, vencimiento, estado **VALIDO**). Hacé click en el ícono de **"Descargar"** para bajar el archivo `.crt`.
+
+   ![Certificado válido emitido](docs/screenshots/paso3d-certificado-valido.png)
+
+5. Guardá el `.crt` como `mi_certificado.crt` en la carpeta del proyecto.
 
 > **Importante:** El archivo `.crt` que descargás es el certificado firmado por ARCA. Junto con tu `mi_clave.key`, forman el par necesario para autenticarte. Uno sin el otro no sirve.
 
 ### 🔗 Paso 4: Habilitar el servicio de Facturación Electrónica
 
-1. Volvé al menú principal de ARCA
-2. Entrá a **"Administrador de Relaciones de Clave Fiscal"**
-3. Hacé click en **"Nueva Relación"**
-4. Navegá por las opciones:
-   - **Representante:** vos mismo (tu CUIT)
-   - **Servicio:** **ARCA** → **WebServices** → **Facturación Electrónica**
-5. Te va a pedir que selecciones un **Computador Fiscal** — elegí el alias que creaste (ej. `facturacion`)
-6. Confirmá
+1. Volvé al **"Administrador de Relaciones de Clave Fiscal"** y hacé click en **"Nueva Relación"**. En la fila *Servicio* del formulario, hacé click en **BUSCAR** — se abre un buscador con todos los servicios disponibles. Buscá **Facturación Electrónica** (verificá que sea esa, no "Factura electrónica de exportación" ni "MTXCA" — son otros servicios).
 
-<!-- TODO: screenshot de nueva relación -->
-<!-- ![Nueva relación](docs/screenshots/paso4-nueva-relacion.png) -->
+   ![Buscar servicio Facturación Electrónica](docs/screenshots/paso4a-buscar-facturacion.png)
+
+2. ARCA te muestra el formulario de autorización. Como **Computador Fiscal** elegí el alias que creaste en el Paso 3 (ej. `facturacion`). Confirmá.
+
+   ![Autorizar Computador Fiscal](docs/screenshots/paso4b-autorizar-computador.png)
+
+   > **Nota sobre la captura:** la imagen de arriba muestra el flujo con *"Factura electronica de exportacion"* (fue la que estaba a mano cuando se sacó). El formulario es **idéntico** para *Facturación Electrónica* — solo cambia el nombre del servicio en el banner. Lo importante es que en **Computador Fiscal** elijas tu alias.
 
 > **¿Por qué dice "Computador Fiscal"?** Es la forma que tiene ARCA de vincular tu certificado digital con un servicio específico. Tu "computador fiscal" es tu máquina/servidor que va a firmar las facturas.
 
