@@ -1,0 +1,77 @@
+name: PR Agent (DeepSeek V4-Flash)
+
+# Review automático de PRs con DeepSeek V4-Flash vía Qodo PR-Agent.
+# Setup:
+#   1. Crear API key en https://platform.deepseek.com/
+#   2. Cargar como GitHub secret: `gh secret set DEEPSEEK_API_KEY -R GeraCollante/PyARCA`
+#      (o desde Settings → Secrets → Actions en la web)
+#
+# Qué hace:
+#   - auto_review: comenta la PR con análisis de código, bugs potenciales, sugerencias
+#   - auto_describe: completa/mejora la descripción de la PR si está vacía o pobre
+#   - auto_improve: sugiere mejoras concretas con snippets aplicables
+#   - en cada push a la PR, vuelve a correr sobre el diff completo de la PR
+#
+# Comandos manuales (desde comentarios en la PR):
+#   /review, /describe, /improve, /ask <pregunta>, /update_changelog
+#
+# Costo estimado: centavos por PR con V4-Flash.
+
+on:
+  pull_request:
+    # `synchronize` dispara cada vez que se pushea a la rama de la PR.
+    # PR-Agent solo hace review incremental con `/review -i`; este workflow usa
+    # `/review` completo vía auto_review.
+    types: [opened, reopened, ready_for_review, synchronize]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  pr_agent:
+    # Evita loops si el propio bot comenta
+    if: ${{ github.event.sender.type != 'Bot' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Run PR Agent
+        uses: qodo-ai/pr-agent@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+          # Modelo: DeepSeek V4-Flash (el barato y rápido).
+          # Si querés mejor calidad y no te importa pagar 10x más, cambiar a deepseek-reasoner (V4-Pro).
+          config.model: "deepseek/deepseek-chat"
+          config.fallback_models: '["deepseek/deepseek-chat"]'
+          DEEPSEEK.KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+
+          # Automatizaciones en cada PR nueva
+          github_action_config.auto_review: "true"
+          github_action_config.auto_describe: "true"
+          github_action_config.auto_improve: "true"
+
+          # Lista de eventos de PR que Qodo procesa. Por default NO incluye
+          # `synchronize` — si solo se agrega al trigger del workflow sin
+          # agregarlo acá, el action arranca pero Qodo internamente loguea
+          # "Skipping action: synchronize" y no postea nada.
+          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "review_requested", "synchronize"]'
+
+          # En cada `synchronize` queremos reprocesar toda la PR, no agrupar por
+          # commits nuevos. Desactivamos comentarios persistentes e historial
+          # para evitar la sección "Latest/Previous suggestions up to commit".
+          pr_reviewer.persistent_comment: "false"
+          pr_code_suggestions.persistent_comment: "false"
+          pr_code_suggestions.max_history_len: "0"
+          pr_reviewer.final_update_message: "false"
+          pr_reviewer.enable_review_labels_effort: "false"
+
+          # Respuestas en inglés (default del modelo base — coding terms
+          # más limpios y menos traducciones raras).
+          config.response_language: "en-US"
+
+          # Máximo de tokens de contexto — ajustar si las PRs son grandes
+          config.max_model_tokens: 32000
