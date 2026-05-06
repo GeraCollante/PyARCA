@@ -76,3 +76,7 @@ jobs:
 
           # Máximo de tokens de contexto — ajustar si las PRs son grandes
           config.max_model_tokens: 32000
+
+          # `deepseek/deepseek-v4-flash` no está en el MAX_TOKENS hardcodeado
+          # de pr-agent, así que hay que declarar el max real del modelo (1M).
+          config.custom_model_max_tokens: 1000000
