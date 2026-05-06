@@ -58,6 +58,26 @@ def mock_wsfev1():
 
 
 @pytest.fixture
+def mock_wsfexv1():
+    """WSFEXv1 mockeado con respuestas exitosas por defecto."""
+    mock = Mock()
+    mock.GetLastCMP.return_value = 5
+    mock.GetLastID.return_value = 100
+    mock.GetParamCtz.return_value = "1180.50"
+    mock.Authorize.return_value = "86200000000001"
+    mock.CAE = "86200000000001"
+    mock.FchVencCAE = "20260516"
+    mock.Vencimiento = "16/05/2026"
+    mock.Resultado = "A"
+    mock.ErrMsg = ""
+    mock.Obs = ""
+    mock.AppServerStatus = "OK"
+    mock.DbServerStatus = "OK"
+    mock.AuthServerStatus = "OK"
+    return mock
+
+
+@pytest.fixture
 def mock_fepdf():
     """FEPDF mockeado."""
     mock = Mock()
@@ -107,6 +127,14 @@ class TestConstantes:
     def test_tipos_comprobante(self):
         assert facturar.FACTURA_C == 11
         assert facturar.NOTA_CREDITO_C == 13
+        assert facturar.FACTURA_E == 19
+        assert facturar.NOTA_CREDITO_E == 21
+
+    def test_urls_wsfexv1(self):
+        assert "wsfexv1" in facturar.URLS["homo"]
+        assert "wsfexv1" in facturar.URLS["prod"]
+        assert "wsfexv1" in facturar.URLS["prod"]["wsfexv1"]
+        assert "homo" in facturar.URLS["homo"]["wsfexv1"]
 
     def test_concepto_servicios(self):
         assert facturar.CONCEPTO == 2
@@ -875,3 +903,397 @@ class TestLoadEnv:
         # Cleanup
         os.environ.pop("TEST_PYARCA_VAR", None)
         os.environ.pop("OTRA", None)
+
+
+# =============================================================================
+# 12. Factura E / NC E (exportación)
+# =============================================================================
+
+class TestAutenticarErrores:
+    @patch("facturar.WSFEXv1")
+    @patch("facturar.WSAA")
+    def test_servicio_no_autorizado_mensaje_amigable(self, MockWSAA, MockWSFEXv1, capsys):
+        from pysimplesoap.client import SoapFault
+        wsaa = MockWSAA.return_value
+        wsaa.Autenticar.side_effect = SoapFault(
+            "ns1:coe.notAuthorized", "Computador no autorizado a acceder al servicio"
+        )
+
+        with pytest.raises(SystemExit) as exc:
+            facturar.autenticar(produccion=True, servicio="wsfex")
+        assert exc.value.code == 1
+
+        out = capsys.readouterr().out
+        assert "Factura electronica de exportacion" in out
+        assert "Administrador de Relaciones" in out
+
+    @patch("facturar.WSFEv1")
+    @patch("facturar.WSAA")
+    def test_cert_untrusted_mensaje_amigable(self, MockWSAA, MockWSFEv1, capsys):
+        from pysimplesoap.client import SoapFault
+        wsaa = MockWSAA.return_value
+        wsaa.Autenticar.side_effect = SoapFault(
+            "ns1:cms.cert.untrusted", "Certificado no emitido por AC de confianza"
+        )
+
+        with pytest.raises(SystemExit) as exc:
+            facturar.autenticar(produccion=False)
+        assert exc.value.code == 1
+
+        out = capsys.readouterr().out
+        assert "homologación" in out
+
+    @patch("facturar.WSFEv1")
+    @patch("facturar.WSAA")
+    def test_soap_fault_desconocido_se_propaga(self, MockWSAA, MockWSFEv1):
+        from pysimplesoap.client import SoapFault
+        wsaa = MockWSAA.return_value
+        wsaa.Autenticar.side_effect = SoapFault("ns1:foo.bar", "algo raro")
+
+        with pytest.raises(SoapFault):
+            facturar.autenticar(produccion=False)
+
+
+class TestAutenticarWsfex:
+    @patch("facturar.WSFEXv1")
+    @patch("facturar.WSAA")
+    def test_servicio_wsfex_usa_wsfexv1(self, MockWSAA, MockWSFEXv1):
+        wsaa = MockWSAA.return_value
+        wsaa.Autenticar.return_value = "ticket"
+        ws = MockWSFEXv1.return_value
+        ws.AppServerStatus = "OK"
+        ws.DbServerStatus = "OK"
+        ws.AuthServerStatus = "OK"
+
+        result = facturar.autenticar(produccion=True, servicio="wsfex")
+
+        wsaa.Autenticar.assert_called_once_with(
+            "wsfex", facturar.CERT, facturar.PRIVATEKEY,
+            wsdl=facturar.URLS["prod"]["wsaa"], cache=facturar.CACHE,
+        )
+        ws.Conectar.assert_called_once_with(
+            facturar.CACHE, facturar.URLS["prod"]["wsfexv1"]
+        )
+        assert result is ws
+
+    @patch("facturar.WSFEXv1")
+    @patch("facturar.WSAA")
+    def test_homologacion_wsfex(self, MockWSAA, MockWSFEXv1):
+        wsaa = MockWSAA.return_value
+        wsaa.Autenticar.return_value = "ticket"
+        ws = MockWSFEXv1.return_value
+        ws.AppServerStatus = "OK"
+        ws.DbServerStatus = "OK"
+        ws.AuthServerStatus = "OK"
+
+        facturar.autenticar(produccion=False, servicio="wsfex")
+
+        ws.Conectar.assert_called_once_with(
+            facturar.CACHE, facturar.URLS["homo"]["wsfexv1"]
+        )
+
+
+class TestEmitirComprobanteE:
+    @patch("facturar.datetime")
+    def test_factura_e_exitosa(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        result = facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 1000.0,
+            "Acme Inc", "50000000059",
+            "Software services - April 2026",
+            pais_destino=200, moneda="DOL", tipo_cambio=1180.0,
+        )
+
+        assert result["tipo_cbte"] == 19
+        assert result["cbte_nro"] == 6              # ultimo(5) + 1
+        assert result["cae"] == "86200000000001"
+        assert result["pais_destino"] == 200
+        assert result["moneda"] == "DOL"
+        assert result["tipo_cambio"] == 1180.0
+        assert result["nro_doc"] == "50000000059"
+
+    @patch("facturar.datetime")
+    def test_authorize_recibe_id_incremental(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+        mock_wsfexv1.GetLastID.return_value = 42
+
+        facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, tipo_cambio=1.0,
+        )
+
+        mock_wsfexv1.Authorize.assert_called_once_with(43)
+
+    @patch("facturar.datetime")
+    def test_auto_fetch_cotizacion(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+        mock_wsfexv1.GetParamCtz.return_value = "1234.56"
+
+        result = facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, moneda="DOL", tipo_cambio=None,
+        )
+
+        mock_wsfexv1.GetParamCtz.assert_called_once_with("DOL")
+        assert result["tipo_cambio"] == 1234.56
+
+    @patch("facturar.datetime")
+    def test_cotizacion_invalida_exit(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+        mock_wsfexv1.GetParamCtz.return_value = "no-es-un-numero"
+
+        with pytest.raises(SystemExit) as exc:
+            facturar.emitir_comprobante_e(
+                mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+                pais_destino=200, moneda="DOL", tipo_cambio=None,
+            )
+        assert exc.value.code == 1
+
+    @patch("facturar.datetime")
+    def test_sin_cuit_pais_cliente_tipo_doc_99(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        result = facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "", "Desc",
+            pais_destino=200, tipo_cambio=1.0,
+        )
+
+        assert result["tipo_doc"] == 99
+        assert result["nro_doc"] == ""
+
+    @patch("facturar.datetime")
+    def test_domicilio_vacio_usa_no_declarado(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, tipo_cambio=1.0,
+        )
+
+        kwargs = mock_wsfexv1.CrearFactura.call_args[1]
+        assert kwargs["domicilio_cliente"] == "NO DECLARADO"
+
+    @patch("facturar.datetime")
+    def test_domicilio_provisto_se_respeta(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, tipo_cambio=1.0,
+            domicilio_cliente="123 Main St, NYC",
+        )
+
+        kwargs = mock_wsfexv1.CrearFactura.call_args[1]
+        assert kwargs["domicilio_cliente"] == "123 Main St, NYC"
+
+    @patch("facturar.datetime")
+    def test_moneda_pes_no_consulta_cotizacion(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        result = facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, moneda="PES", tipo_cambio=None,
+        )
+
+        mock_wsfexv1.GetParamCtz.assert_not_called()
+        assert result["tipo_cambio"] == 1.0
+
+    @patch("facturar.datetime")
+    def test_nc_e_agrega_cmp_asoc(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.NOTA_CREDITO_E, 100.0, "X", "1", "Anulación",
+            pais_destino=200, tipo_cambio=1.0, factura_asociada=7,
+        )
+
+        mock_wsfexv1.AgregarCmpAsoc.assert_called_once()
+        kwargs = mock_wsfexv1.AgregarCmpAsoc.call_args[1]
+        assert kwargs["cbte_tipo"] == facturar.FACTURA_E
+        assert kwargs["cbte_nro"] == 7
+
+    @patch("facturar.datetime")
+    def test_error_afip_exit(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+        mock_wsfexv1.ErrMsg = "Error grave"
+
+        with pytest.raises(SystemExit) as exc:
+            facturar.emitir_comprobante_e(
+                mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+                pais_destino=200, tipo_cambio=1.0,
+            )
+        assert exc.value.code == 1
+
+    @patch("facturar.datetime")
+    def test_rechazo_exit(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+        mock_wsfexv1.ErrMsg = ""
+        mock_wsfexv1.Resultado = "R"
+
+        with pytest.raises(SystemExit) as exc:
+            facturar.emitir_comprobante_e(
+                mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+                pais_destino=200, tipo_cambio=1.0,
+            )
+        assert exc.value.code == 1
+
+    @patch("facturar.datetime")
+    def test_guarda_en_registro(self, mock_dt, mock_wsfexv1, tmp_facturas):
+        mock_dt.date.today.return_value.strftime.return_value = "20260506"
+
+        facturar.emitir_comprobante_e(
+            mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
+            pais_destino=200, tipo_cambio=1.0,
+        )
+
+        registro = facturar.cargar_registro()
+        assert len(registro) == 1
+        assert registro[0]["tipo_cbte"] == 19
+
+
+class TestCmdFacturaE:
+    @patch("facturar.generar_pdf_e")
+    @patch("facturar.emitir_comprobante_e")
+    @patch("facturar.autenticar")
+    def test_cmd_factura_e_basico(self, mock_auth, mock_emitir, mock_pdf):
+        mock_auth.return_value = Mock()
+        mock_emitir.return_value = {"tipo_cbte": 19}
+
+        args = argparse.Namespace(
+            monto=1000, cliente="Acme Inc",
+            cuit_pais_cliente="50000000059",
+            descripcion="Services", pais_destino=200,
+            moneda="DOL", tipo_cambio=1180.0,
+            incoterms="N/A", idioma=7,
+            punto_vta=3, produccion=True,
+        )
+        facturar.cmd_factura_e(args)
+
+        mock_auth.assert_called_once_with(True, servicio="wsfex")
+        mock_emitir.assert_called_once()
+        mock_pdf.assert_called_once()
+
+
+class TestCmdNcE:
+    @patch("facturar.generar_pdf_e")
+    @patch("facturar.emitir_comprobante_e")
+    @patch("facturar.autenticar")
+    def test_cmd_nc_e_pasa_factura_asociada(self, mock_auth, mock_emitir, mock_pdf):
+        mock_auth.return_value = Mock()
+        mock_emitir.return_value = {"tipo_cbte": 21}
+
+        args = argparse.Namespace(
+            monto=1000, cliente="Acme Inc",
+            cuit_pais_cliente="50000000059",
+            descripcion="Anulación", pais_destino=200,
+            moneda="DOL", tipo_cambio=1180.0,
+            incoterms="N/A", idioma=7,
+            punto_vta=3, produccion=True,
+            factura_asociada=7,
+        )
+        facturar.cmd_nc_e(args)
+
+        emitir_args = mock_emitir.call_args
+        assert emitir_args[0][1] == facturar.NOTA_CREDITO_E
+        assert emitir_args[1]["factura_asociada"] == 7
+
+
+class TestGenerarPDFE:
+    @pytest.fixture
+    def sample_e(self):
+        return {
+            "tipo_cbte": 19,
+            "tipo_nombre": "Factura E",
+            "cbte_nro": 1,
+            "cae": "86200000000001",
+            "fch_venc_cae": "20260516",
+            "fecha_cbte": "20260506",
+            "punto_vta": 3,
+            "monto": 1000.0,
+            "cliente": "Acme Inc",
+            "descripcion": "Software services",
+            "tipo_doc": 80,
+            "nro_doc": "50000000059",
+            "pais_destino": 200,
+            "moneda": "DOL",
+            "tipo_cambio": 1180.50,
+            "incoterms": "N/A",
+            "idioma": 7,
+        }
+
+    @patch("facturar.FEPDF")
+    def test_carga_plantilla_factura_e(self, MockFEPDF, sample_e, tmp_facturas):
+        fepdf = MockFEPDF.return_value
+        facturar.generar_pdf_e(sample_e, produccion=True)
+
+        fepdf.CargarFormato.assert_called_once()
+        plantilla = fepdf.CargarFormato.call_args[0][0]
+        assert plantilla.endswith("factura_e.csv")
+
+    @patch("facturar.FEPDF")
+    def test_inyecta_datos_exportacion(self, MockFEPDF, sample_e, tmp_facturas):
+        fepdf = MockFEPDF.return_value
+        facturar.generar_pdf_e(sample_e, produccion=True)
+
+        datos = dict(c[0] for c in fepdf.AgregarDato.call_args_list)
+        assert datos["PaisDestino"] == "200"
+        assert datos["Moneda"] == "DOL"
+        assert "1180" in datos["Cotizacion"]
+        assert datos["Incoterms"] == "N/A"
+
+    @patch("facturar.FEPDF")
+    def test_pdf_path_factura_e(self, MockFEPDF, sample_e, tmp_facturas):
+        result = facturar.generar_pdf_e(sample_e, produccion=True)
+        assert "FE-0003-00000001.pdf" in result
+
+    @patch("facturar.FEPDF")
+    def test_pdf_path_nc_e(self, MockFEPDF, sample_e, tmp_facturas):
+        sample_e["tipo_cbte"] = 21
+        result = facturar.generar_pdf_e(sample_e, produccion=True)
+        assert "NE-0003-00000001.pdf" in result
+
+    @patch("facturar.FEPDF")
+    def test_id_impositivo_vacio_usa_cero(self, MockFEPDF, sample_e, tmp_facturas):
+        fepdf = MockFEPDF.return_value
+        sample_e["nro_doc"] = ""
+
+        facturar.generar_pdf_e(sample_e, produccion=True)
+
+        kwargs = fepdf.CrearFactura.call_args[1]
+        assert kwargs["id_impositivo"] == "0"
+
+    @patch("facturar.FEPDF")
+    def test_homologacion_marca_agua(self, MockFEPDF, sample_e, tmp_facturas):
+        fepdf = MockFEPDF.return_value
+        facturar.generar_pdf_e(sample_e, produccion=False)
+        fepdf.AgregarCampo.assert_called_once()
+        args = fepdf.AgregarCampo.call_args
+        assert args[0][0] == "DEMO"
+
+
+class TestListarFacturaE:
+    def test_listar_incluye_factura_e(self, tmp_facturas, capsys):
+        comprobante_e = {
+            "tipo_cbte": 19,
+            "tipo_nombre": "Factura E",
+            "cbte_nro": 1,
+            "cae": "86200000000001",
+            "fch_venc_cae": "20260516",
+            "fecha_cbte": "20260506",
+            "punto_vta": 3,
+            "monto": 1000.0,
+            "cliente": "Acme Inc",
+            "descripcion": "Services",
+            "tipo_doc": 80,
+            "nro_doc": "50000000059",
+        }
+        facturar.guardar_registro([comprobante_e])
+
+        args = argparse.Namespace()
+        facturar.cmd_listar(args)
+        output = capsys.readouterr().out
+
+        assert "Factura E" in output
+        assert "86200000000001" in output
+        assert "Acme Inc" in output

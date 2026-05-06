@@ -6,6 +6,12 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Agregado
+- Soporte para **Factura E** (tipo 19) y **Nota de Crédito E** (tipo 21) — exportación de servicios contra **WSFEXv1**.
+- Subcomandos `factura-e` y `nota-credito-e` en el CLI con flags propios: `--pais-destino`, `--cuit-pais-cliente`, `--moneda`, `--tipo-cambio` (auto-fetch desde ARCA si falta), `--incoterms`, `--idioma`.
+- Plantilla PDF nueva `plantillas/factura_e.csv` adaptada a exportación (sin IVA, con país, moneda, cotización e INCOTERMS).
+- Refactor de `autenticar()` para aceptar `servicio="wsfe"` (default, mercado interno) o `servicio="wsfex"` (exportación). Backwards compatible.
+
 ## [0.1.0] - 2026-05-06
 
 Primera release pública del fork. El CLI de facturación (`facturar.py`) está testeado y probado en producción para Facturas C y Notas de Crédito C de Monotributo (concepto Servicios). El resto de la librería está reorganizado y sin probar.
