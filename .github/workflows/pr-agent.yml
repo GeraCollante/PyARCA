@@ -39,7 +39,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Run PR Agent
-        uses: qodo-ai/pr-agent@main
+        # Pin a SHA inmutable (best practice GitHub Actions) para reproducibilidad
+        # y evitar breaking changes silenciosos. Actualizar revisando releases en
+        # https://github.com/The-PR-Agent/pr-agent/releases.
+        uses: The-PR-Agent/pr-agent@2e958df94be26821c5b64670c83727cb294bcfe8 # v0.34.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
