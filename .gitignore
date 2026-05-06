@@ -16,6 +16,7 @@ referencias/
 *.jpg
 *.png
 !docs/logo.png
+!docs/screenshots/*.png
 entrada.txt
 facturas.json
 facturas.txt
