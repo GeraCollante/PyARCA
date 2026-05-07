@@ -52,7 +52,7 @@ python facturar.py factura-e \
   --cliente "Acme Inc" \
   --cuit-pais-cliente 50000000059 \
   --descripcion "Software development services - April 2026" \
-  --pais-destino 200 \
+  --pais-destino 212 \
   --moneda DOL \
   --tipo-cambio 1180.50 \
   --produccion
@@ -63,7 +63,7 @@ python facturar.py nota-credito-e \
   --cliente "Acme Inc" \
   --cuit-pais-cliente 50000000059 \
   --descripcion "Cancellation of FE 0003-00000001" \
-  --pais-destino 200 \
+  --pais-destino 212 \
   --moneda DOL \
   --tipo-cambio 1180.50 \
   --factura-asociada 1 \
