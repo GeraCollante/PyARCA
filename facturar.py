@@ -23,6 +23,7 @@ import argparse
 import datetime
 import json
 import os
+import re
 import sys
 
 from pysimplesoap.client import SoapFault
@@ -159,6 +160,44 @@ def guardar_registro(registro):
     os.makedirs(FACTURAS_DIR, exist_ok=True)
     with open(REGISTRO_PATH, "w") as f:
         json.dump(registro, f, indent=2, ensure_ascii=False)
+
+
+def _carpeta_cliente(cliente: str) -> str:
+    """Deriva nombre de carpeta del cliente (PascalCase, sin sufijos legales).
+
+    Ejemplos:
+        'WAIS S. R. L.' → 'Wais'
+        'Wais SRL' → 'Wais'
+        'Consumidor Final' → 'ConsumidorFinal'
+        'ORGANIZACIONES RAFUL S.A.' → 'OrganizacionesRaful'
+        '' → 'SinClasificar'
+    """
+    nombre = re.sub(
+        r"\b(S\.?\s*R\.?\s*L\.?|S\.?\s*A\.?\s*S?\.?|SRL|SAS|SA|Inc\.?|LLC|Ltd\.?)\s*$",
+        "",
+        cliente,
+        flags=re.IGNORECASE,
+    )
+    nombre = re.sub(r"[^\w\s]", "", nombre, flags=re.UNICODE)
+    palabras = [p.capitalize() for p in nombre.split() if p]
+    return "".join(palabras) or "SinClasificar"
+
+
+def _path_pdf_destino(comprobante: dict, prefijo: str) -> tuple:
+    """Construye (carpeta_destino, nombre_final) para el PDF de un comprobante.
+
+    El nombre final tiene la forma:
+        {PREFIJO}-{PV:04d}-{NRO:08d}_{YYYY-MM-DD}_{Cliente}_{MontoInt}.pdf
+    """
+    carpeta = _carpeta_cliente(comprobante["cliente"])
+    destino_dir = os.path.join(FACTURAS_DIR, carpeta)
+    fecha = comprobante["fecha_cbte"]
+    fecha_fmt = f"{fecha[:4]}-{fecha[4:6]}-{fecha[6:8]}"
+    nombre_final = (
+        f"{prefijo}-{comprobante['punto_vta']:04d}-{comprobante['cbte_nro']:08d}_"
+        f"{fecha_fmt}_{carpeta}_{int(comprobante['monto'])}.pdf"
+    )
+    return destino_dir, nombre_final
 
 
 def emitir_comprobante(wsfev1, tipo_cbte, monto, cliente, descripcion,
@@ -447,12 +486,10 @@ def generar_pdf(comprobante, produccion=False):
     fepdf.CrearPlantilla(papel="A4", orientacion="portrait")
     fepdf.ProcesarPlantilla(num_copias=1, lineas_max=24, qty_pos="izq")
 
-    os.makedirs(FACTURAS_DIR, exist_ok=True)
     prefijo = "NC" if comprobante["tipo_cbte"] == NOTA_CREDITO_C else "FC"
-    archivo = os.path.join(
-        FACTURAS_DIR,
-        f"{prefijo}-{comprobante['punto_vta']:04d}-{comprobante['cbte_nro']:08d}.pdf"
-    )
+    destino_dir, nombre_final = _path_pdf_destino(comprobante, prefijo)
+    os.makedirs(destino_dir, exist_ok=True)
+    archivo = os.path.join(destino_dir, nombre_final)
     fepdf.GenerarPDF(archivo=archivo)
 
     print(f"\n  PDF generado: {archivo}")
@@ -524,12 +561,10 @@ def generar_pdf_e(comprobante, produccion=False):
     fepdf.CrearPlantilla(papel="A4", orientacion="portrait")
     fepdf.ProcesarPlantilla(num_copias=1, lineas_max=24, qty_pos="izq")
 
-    os.makedirs(FACTURAS_DIR, exist_ok=True)
     prefijo = "NE" if comprobante["tipo_cbte"] == NOTA_CREDITO_E else "FE"
-    archivo = os.path.join(
-        FACTURAS_DIR,
-        f"{prefijo}-{comprobante['punto_vta']:04d}-{comprobante['cbte_nro']:08d}.pdf"
-    )
+    destino_dir, nombre_final = _path_pdf_destino(comprobante, prefijo)
+    os.makedirs(destino_dir, exist_ok=True)
+    archivo = os.path.join(destino_dir, nombre_final)
     fepdf.GenerarPDF(archivo=archivo)
 
     print(f"\n  PDF generado: {archivo}")

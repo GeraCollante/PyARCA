@@ -156,6 +156,32 @@ class TestConstantes:
 
 
 # =============================================================================
+# 1.5 Helper _carpeta_cliente
+# =============================================================================
+
+class TestCarpetaCliente:
+    @pytest.mark.parametrize("cliente,esperado", [
+        ("Consumidor Final", "ConsumidorFinal"),
+        ("WAIS S. R. L.", "Wais"),
+        ("Wais SRL", "Wais"),
+        ("Wais S.R.L.", "Wais"),
+        ("Test SRL", "Test"),
+        ("ORGANIZACIONES RAFUL S.A.", "OrganizacionesRaful"),
+        ("Acme Inc.", "Acme"),
+        ("Acme Inc", "Acme"),
+        ("Foo S.A.S.", "Foo"),
+        ("Globant LLC", "Globant"),
+        ("Empresa Ltd.", "Empresa"),
+        ("José Pérez", "JoséPérez"),  # acentos preservados (re.UNICODE)
+        ("", "SinClasificar"),
+        ("   ", "SinClasificar"),
+        ("S.R.L.", "SinClasificar"),  # solo sufijo
+    ])
+    def test_deriva_correctamente(self, cliente, esperado):
+        assert facturar._carpeta_cliente(cliente) == esperado
+
+
+# =============================================================================
 # 2. Registro (cargar / guardar)
 # =============================================================================
 
@@ -509,7 +535,10 @@ class TestGenerarPDF:
 
         result = facturar.generar_pdf(sample_comprobante, produccion=True)
 
-        assert "FC-0003-00000008.pdf" in result
+        # Auto-organizado en facturas/<Cliente>/ con nombre descriptivo
+        assert "FC-0003-00000008" in result
+        assert "ConsumidorFinal" in result
+        assert result.endswith(".pdf")
 
     @patch("facturar.FEPDF")
     def test_pdf_path_nota_credito(self, MockFEPDF, sample_comprobante, tmp_facturas):
@@ -519,7 +548,9 @@ class TestGenerarPDF:
 
         result = facturar.generar_pdf(sample_comprobante, produccion=True)
 
-        assert "NC-0003-00000001.pdf" in result
+        assert "NC-0003-00000001" in result
+        assert "ConsumidorFinal" in result
+        assert result.endswith(".pdf")
 
     @patch("facturar.FEPDF")
     def test_carga_plantilla(self, MockFEPDF, sample_comprobante, tmp_facturas):
@@ -1245,13 +1276,18 @@ class TestGenerarPDFE:
     @patch("facturar.FEPDF")
     def test_pdf_path_factura_e(self, MockFEPDF, sample_e, tmp_facturas):
         result = facturar.generar_pdf_e(sample_e, produccion=True)
-        assert "FE-0003-00000001.pdf" in result
+        # Cliente "Acme Inc" → carpeta "Acme" (Inc se trata como sufijo legal)
+        assert "FE-0003-00000001" in result
+        assert "Acme" in result
+        assert result.endswith(".pdf")
 
     @patch("facturar.FEPDF")
     def test_pdf_path_nc_e(self, MockFEPDF, sample_e, tmp_facturas):
         sample_e["tipo_cbte"] = 21
         result = facturar.generar_pdf_e(sample_e, produccion=True)
-        assert "NE-0003-00000001.pdf" in result
+        assert "NE-0003-00000001" in result
+        assert "Acme" in result
+        assert result.endswith(".pdf")
 
     @patch("facturar.FEPDF")
     def test_id_impositivo_vacio_usa_cero(self, MockFEPDF, sample_e, tmp_facturas):
