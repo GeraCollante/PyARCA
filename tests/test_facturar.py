@@ -1002,13 +1002,13 @@ class TestEmitirComprobanteE:
             mock_wsfexv1, facturar.FACTURA_E, 1000.0,
             "Acme Inc", "50000000059",
             "Software services - April 2026",
-            pais_destino=200, moneda="DOL", tipo_cambio=1180.0,
+            pais_destino=212, moneda="DOL", tipo_cambio=1180.0,
         )
 
         assert result["tipo_cbte"] == 19
         assert result["cbte_nro"] == 6              # ultimo(5) + 1
         assert result["cae"] == "86200000000001"
-        assert result["pais_destino"] == 200
+        assert result["pais_destino"] == 212
         assert result["moneda"] == "DOL"
         assert result["tipo_cambio"] == 1180.0
         assert result["nro_doc"] == "50000000059"
@@ -1020,7 +1020,7 @@ class TestEmitirComprobanteE:
 
         facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-            pais_destino=200, tipo_cambio=1.0,
+            pais_destino=212, tipo_cambio=1.0,
         )
 
         mock_wsfexv1.Authorize.assert_called_once_with(43)
@@ -1032,7 +1032,7 @@ class TestEmitirComprobanteE:
 
         result = facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-            pais_destino=200, moneda="DOL", tipo_cambio=None,
+            pais_destino=212, moneda="DOL", tipo_cambio=None,
         )
 
         mock_wsfexv1.GetParamCtz.assert_called_once_with("DOL")
@@ -1046,7 +1046,7 @@ class TestEmitirComprobanteE:
         with pytest.raises(SystemExit) as exc:
             facturar.emitir_comprobante_e(
                 mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-                pais_destino=200, moneda="DOL", tipo_cambio=None,
+                pais_destino=212, moneda="DOL", tipo_cambio=None,
             )
         assert exc.value.code == 1
 
@@ -1056,7 +1056,7 @@ class TestEmitirComprobanteE:
 
         result = facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "", "Desc",
-            pais_destino=200, tipo_cambio=1.0,
+            pais_destino=212, tipo_cambio=1.0,
         )
 
         assert result["tipo_doc"] == 99
@@ -1068,7 +1068,7 @@ class TestEmitirComprobanteE:
 
         facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-            pais_destino=200, tipo_cambio=1.0,
+            pais_destino=212, tipo_cambio=1.0,
         )
 
         kwargs = mock_wsfexv1.CrearFactura.call_args[1]
@@ -1080,7 +1080,7 @@ class TestEmitirComprobanteE:
 
         facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-            pais_destino=200, tipo_cambio=1.0,
+            pais_destino=212, tipo_cambio=1.0,
             domicilio_cliente="123 Main St, NYC",
         )
 
@@ -1093,7 +1093,7 @@ class TestEmitirComprobanteE:
 
         result = facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-            pais_destino=200, moneda="PES", tipo_cambio=None,
+            pais_destino=212, moneda="PES", tipo_cambio=None,
         )
 
         mock_wsfexv1.GetParamCtz.assert_not_called()
@@ -1105,7 +1105,7 @@ class TestEmitirComprobanteE:
 
         facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.NOTA_CREDITO_E, 100.0, "X", "1", "Anulación",
-            pais_destino=200, tipo_cambio=1.0, factura_asociada=7,
+            pais_destino=212, tipo_cambio=1.0, factura_asociada=7,
         )
 
         mock_wsfexv1.AgregarCmpAsoc.assert_called_once()
@@ -1121,7 +1121,7 @@ class TestEmitirComprobanteE:
         with pytest.raises(SystemExit) as exc:
             facturar.emitir_comprobante_e(
                 mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-                pais_destino=200, tipo_cambio=1.0,
+                pais_destino=212, tipo_cambio=1.0,
             )
         assert exc.value.code == 1
 
@@ -1134,7 +1134,7 @@ class TestEmitirComprobanteE:
         with pytest.raises(SystemExit) as exc:
             facturar.emitir_comprobante_e(
                 mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-                pais_destino=200, tipo_cambio=1.0,
+                pais_destino=212, tipo_cambio=1.0,
             )
         assert exc.value.code == 1
 
@@ -1144,7 +1144,7 @@ class TestEmitirComprobanteE:
 
         facturar.emitir_comprobante_e(
             mock_wsfexv1, facturar.FACTURA_E, 100.0, "X", "1", "Desc",
-            pais_destino=200, tipo_cambio=1.0,
+            pais_destino=212, tipo_cambio=1.0,
         )
 
         registro = facturar.cargar_registro()
@@ -1163,7 +1163,7 @@ class TestCmdFacturaE:
         args = argparse.Namespace(
             monto=1000, cliente="Acme Inc",
             cuit_pais_cliente="50000000059",
-            descripcion="Services", pais_destino=200,
+            descripcion="Services", pais_destino=212,
             moneda="DOL", tipo_cambio=1180.0,
             incoterms="N/A", idioma=7,
             punto_vta=3, produccion=True,
@@ -1186,7 +1186,7 @@ class TestCmdNcE:
         args = argparse.Namespace(
             monto=1000, cliente="Acme Inc",
             cuit_pais_cliente="50000000059",
-            descripcion="Anulación", pais_destino=200,
+            descripcion="Anulación", pais_destino=212,
             moneda="DOL", tipo_cambio=1180.0,
             incoterms="N/A", idioma=7,
             punto_vta=3, produccion=True,

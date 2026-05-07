@@ -254,7 +254,7 @@ uv run python facturar.py factura-e \
     --cliente "Acme Inc" \
     --cuit-pais-cliente 50000000059 \
     --descripcion "Software development services - April 2026" \
-    --pais-destino 200 \
+    --pais-destino 212 \
     --moneda DOL \
     --tipo-cambio 1180.50 \
     --incoterms "N/A" \
@@ -262,7 +262,7 @@ uv run python facturar.py factura-e \
     --produccion
 ```
 
-Si no pasás `--tipo-cambio`, el CLI consulta la cotización del día a ARCA. Códigos de país comunes: **200**=USA, **203**=Brasil, **212**=Reino Unido. Idiomas: **7**=español (default), **1**=inglés, **2**=portugués.
+Si no pasás `--tipo-cambio`, el CLI consulta la cotización del día a ARCA. Códigos de país comunes: **212**=USA, **203**=Brasil, **426**=Reino Unido, **438**=Alemania (ver tabla completa más abajo). Idiomas: **7**=español (default), **1**=inglés, **2**=portugués.
 
 ### Nota de crédito E (anulación de Factura E)
 
@@ -272,7 +272,7 @@ uv run python facturar.py nota-credito-e \
     --cliente "Acme Inc" \
     --cuit-pais-cliente 50000000059 \
     --descripcion "Cancellation of FE 0003-00000001" \
-    --pais-destino 200 \
+    --pais-destino 212 \
     --moneda DOL \
     --tipo-cambio 1180.50 \
     --factura-asociada 1 \
@@ -327,16 +327,23 @@ Concepto **2 (Servicios)** — requiere período desde/hasta para C y NC C.
 
 | Código | País |
 |---|---|
-| `200` | Estados Unidos |
 | `203` | Brasil |
-| `212` | Reino Unido |
-| `218` | Alemania |
-| `225` | España |
-| `232` | Francia |
-| `438` | Uruguay |
-| `586` | Chile |
+| `204` | Canadá |
+| `208` | Chile |
+| `212` | Estados Unidos |
+| `218` | México |
+| `225` | Uruguay |
+| `310` | China |
+| `315` | India |
+| `320` | Japón |
+| `410` | España |
+| `412` | Francia |
+| `417` | Italia |
+| `423` | Países Bajos |
+| `426` | Reino Unido |
+| `438` | Alemania |
 
-Lista completa en ARCA → tablas auxiliares de `WSFEXv1` (también obtenible vía `wsfexv1.GetParamDstPais()`).
+Códigos verificados contra la tabla oficial de AFIP. La lista completa se obtiene en runtime con `wsfexv1.GetParamDstPais()`. Si tenés dudas con un país no listado acá, consultalo antes de emitir — un código equivocado registra la factura con destino errado.
 
 **Monedas** (`--moneda`):
 

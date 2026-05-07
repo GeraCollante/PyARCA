@@ -6,6 +6,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Corregido
+- **Códigos de país en docs y ejemplos**: la tabla del README y los ejemplos del CLI tenían los códigos de país equivocados (eran provincias / códigos desplazados). Ahora coinciden con la tabla oficial AFIP — `212`=USA (no 200), `438`=Alemania (no 218), `225`=Uruguay (no 438), etc. La verdad se obtiene siempre con `wsfexv1.GetParamDstPais()` en runtime; las constantes hardcodeadas son solo referencia rápida.
+
 ### Agregado
 - Soporte para **Factura E** (tipo 19) y **Nota de Crédito E** (tipo 21) — exportación de servicios contra **WSFEXv1**.
 - Subcomandos `factura-e` y `nota-credito-e` en el CLI con flags propios: `--pais-destino`, `--cuit-pais-cliente`, `--moneda`, `--tipo-cambio` (auto-fetch desde ARCA si falta), `--incoterms`, `--idioma`.

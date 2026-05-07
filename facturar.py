@@ -10,7 +10,7 @@ Mercado interno (WSFEv1):
 Exportación de servicios (WSFEXv1):
     python facturar.py factura-e --monto ... --cliente "Acme Inc" \
         --cuit-pais-cliente 50000000059 --descripcion "Software services" \
-        --pais-destino 200 --moneda DOL --tipo-cambio 1180.50 \
+        --pais-destino 212 --moneda DOL --tipo-cambio 1180.50 \
         --incoterms N/A --idioma 7 --produccion
     python facturar.py nota-credito-e --factura-asociada N ...
 
@@ -687,7 +687,7 @@ def main():
     p_fe.add_argument("--cliente", required=True)
     p_fe.add_argument("--descripcion", required=True)
     p_fe.add_argument("--pais-destino", type=int, required=True,
-                      help="Código de país ARCA (ej. 200=USA, 203=BR, 212=UK)")
+                      help="Código de país ARCA (ej. 212=USA, 203=BR, 426=UK, 438=DE)")
     p_fe.add_argument("--cuit-pais-cliente", default="",
                       help="Tax ID del cliente en el exterior (opcional)")
     p_fe.add_argument("--moneda", default="DOL", help="Default: DOL (USD)")
