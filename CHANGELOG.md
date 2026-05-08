@@ -6,6 +6,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Agregado
+- **Auto-organización de PDFs por cliente.** Tras emitir, el PDF se guarda directamente en `facturas/<Cliente>/{TIPO}-{PV}-{NRO}_{YYYY-MM-DD}_{Cliente}_{MONTO}.pdf` (ej. `facturas/Wais/FC-0003-00000012_2026-05-06_Wais_1251000.pdf`). Hasta ahora era un paso manual documentado en `CLAUDE.md`. Helper `_carpeta_cliente()` deriva el nombre de carpeta del cliente: PascalCase sin sufijos legales (SRL, SA, Inc, LLC, Ltd, S.A.S., S.R.L.). PDFs viejos en `facturas/` raíz no se migran retroactivamente; se mueven a mano si hace falta.
+
 ## [0.2.0] - 2026-05-07
 
 ### Agregado
