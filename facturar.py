@@ -193,9 +193,10 @@ def _path_pdf_destino(comprobante: dict, prefijo: str) -> tuple:
     destino_dir = os.path.join(FACTURAS_DIR, carpeta)
     fecha = comprobante["fecha_cbte"]
     fecha_fmt = f"{fecha[:4]}-{fecha[4:6]}-{fecha[6:8]}"
+    monto_entero = int(float(comprobante["monto"]))
     nombre_final = (
         f"{prefijo}-{comprobante['punto_vta']:04d}-{comprobante['cbte_nro']:08d}_"
-        f"{fecha_fmt}_{carpeta}_{int(comprobante['monto'])}.pdf"
+        f"{fecha_fmt}_{carpeta}_{monto_entero}.pdf"
     )
     return destino_dir, nombre_final
 
