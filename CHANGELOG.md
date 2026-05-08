@@ -6,6 +6,9 @@ El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y e
 
 ## [Unreleased]
 
+### Agregado
+- Sección "Inicio rápido" del README ahora describe dos opciones de instalación: vía plugin de Claude Code de la comunidad ([`kvothesson/facturar`](https://github.com/kvothesson/facturar)) o manual. El plugin envuelve PyARCA en lenguaje natural y maneja install + wizard de `.env`.
+
 ## [0.2.1] - 2026-05-07
 
 ### Agregado
