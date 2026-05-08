@@ -16,7 +16,7 @@
 
 CLI para emitir **Facturas C** y **Notas de Crédito C** (Monotributo) contra ARCA (ex-AFIP) desde la terminal. Construido sobre [pyafipws](https://github.com/reingart/pyafipws), la librería de webservices de AFIP creada por **Mariano Reingart**.
 
-Este repositorio está optimizado para [Claude Code](https://claude.ai/claude-code) — con una configuración mínima, Claude puede emitir facturas, consultar comprobantes y operar el CLI en lenguaje natural. Ver [SKILL.md](SKILL.md) para configurarlo.
+Este repositorio está optimizado para [Claude Code](https://claude.ai/claude-code) — con una configuración mínima, Claude puede emitir facturas, consultar comprobantes y operar el CLI en lenguaje natural. Ver [SKILL.md](SKILL.md) para configurarlo dentro del proyecto, o usar el plugin instalable que se describe debajo.
 
 > **Estado del proyecto:** El CLI de facturación (`facturar.py`) está **testeado y probado en producción** para emisión de Facturas C y Notas de Crédito C de Monotributo (concepto Servicios). Los demás módulos de la librería (facturación A/B, comercio exterior, agricultura, trazabilidad, remitos, etc.) fueron reorganizados y limpiados a nivel de código, pero **no fueron probados en la vida real** por el autor de este fork. El repositorio está abierto a PRs de quienes quieran probar, corregir o extender esos módulos.
 
@@ -24,12 +24,28 @@ Este repositorio está optimizado para [Claude Code](https://claude.ai/claude-co
 
 ## Inicio rápido
 
+Hay dos formas de instalarlo según tu setup.
+
+### Opción A — Plugin de Claude Code (más simple si ya lo usás)
+
+Existe un plugin de la comunidad que envuelve PyARCA en lenguaje natural y se ocupa de la instalación, el wizard de `.env` y la guía del certificado: **[`kvothesson/facturar`](https://github.com/kvothesson/facturar)** — incluido en el marketplace [`ar-plugins`](https://github.com/kvothesson/ar-plugins).
+
+Después de instalarlo en Claude Code, en lugar de armar comandos a mano podés decirle algo como:
+
+> *Emitir factura por $1.500.000 a Wais SRL CUIT 30-71750911-7 por desarrollo de software de mayo*
+
+El plugin traduce eso a la invocación correcta de `facturar.py`, te pide confirmación antes de tocar producción, y maneja los errores. Si PyARCA no está instalado, lo clona; si el `.env` no está, te guía campo por campo.
+
+> **Nota:** plugin de la comunidad, no oficial de PyARCA. Para reportar bugs específicos del plugin, abrir issue en su repo.
+
+### Opción B — Manual (sin Claude Code)
+
 ```bash
 # 1. Instalar uv (si no lo tenés)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. Clonar e instalar
-git clone <repo-url> && cd PyARCA
+git clone https://github.com/GeraCollante/PyARCA.git && cd PyARCA
 uv sync --extra dev
 
 # 3. Ver opciones del CLI
