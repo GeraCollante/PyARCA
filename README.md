@@ -303,7 +303,7 @@ Sin `--produccion`, opera contra homologación (requiere certificado de testing)
 | `--descripcion` | Detalle del servicio | (requerido) |
 | `--desde` / `--hasta` | Período del servicio (YYYYMMDD) | (requerido) |
 | `--cuit-cliente` | CUIT del cliente (si no es consumidor final) | 0 |
-| `--tipo-doc` | Tipo de documento (80=CUIT, 96=DNI, 99=CF) | 99 |
+| `--tipo-doc` | Tipo de documento (80=CUIT, 86=CUIL, 96=DNI, 99=CF) | 99 |
 | `--punto-vta` | Punto de venta | 3 |
 | `--produccion` | Operar contra ARCA producción | homologación |
 | `--factura-asociada` | Nro. de factura a anular (solo NC) | - |
